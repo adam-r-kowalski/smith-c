@@ -13,6 +13,6 @@ typedef struct {
 } smith_span_t;
 
 typedef struct {
-  const char *source;
+  char *source;
   smith_position_t position;
 } smith_cursor_t;
