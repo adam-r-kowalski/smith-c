@@ -5,9 +5,13 @@ test_executable = executable(
   sources : [
     'src/test_main.c',
     'src/assertions.c',
+    'src/random.c',
     'src/test_tokenizer.c',
+    'src/test_hash_interner.c',
     '../src/tokenizer.c',
     '../src/system_allocator.c',
+    '../src/null_allocator.c',
+    '../src/finite_allocator.c',
     '../src/allocator.c',
     '../src/hash_interner.c',
     '../src/interner.c'
