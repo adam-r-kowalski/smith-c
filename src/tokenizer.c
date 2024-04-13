@@ -35,7 +35,7 @@ static smith_next_token_result_t tokenize_symbol(smith_interner_t intener,
   return (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
                 .value = {.symbol = {.interned = intern_result.interned,
-                                     .span = {.begin = cursor.position,
+                                     .span = {.start = cursor.position,
                                               .end = take_while_result.cursor
                                                          .position}}}},
       .cursor = take_while_result.cursor,
@@ -47,7 +47,7 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   if (cursor.source[0] == '\0') {
     return (smith_next_token_result_t){
         .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,
-                  .value = {.end_of_file = {.span = {.begin = cursor.position,
+                  .value = {.end_of_file = {.span = {.start = cursor.position,
                                                      .end = cursor.position}}}},
         .cursor = cursor,
     };

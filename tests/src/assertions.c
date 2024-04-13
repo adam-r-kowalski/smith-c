@@ -8,7 +8,7 @@ void smith_assert_position_equal(smith_position_t actual,
 }
 
 void smith_assert_span_equal(smith_span_t actual, smith_span_t expected) {
-  smith_assert_position_equal(actual.begin, expected.begin);
+  smith_assert_position_equal(actual.start, expected.start);
   smith_assert_position_equal(actual.end, expected.end);
 }
 

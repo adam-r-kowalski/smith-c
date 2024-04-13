@@ -8,7 +8,7 @@ typedef struct {
 } smith_position_t;
 
 typedef struct {
-  smith_position_t begin;
+  smith_position_t start;
   smith_position_t end;
 } smith_span_t;
 
