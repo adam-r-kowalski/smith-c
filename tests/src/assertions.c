@@ -32,6 +32,12 @@ void smith_assert_float_equal(smith_float_t actual, smith_float_t expected) {
   munit_assert_int(actual.interned, ==, expected.interned);
 }
 
+void smith_assert_operator_equal(smith_operator_t actual,
+                                 smith_operator_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.kind, ==, expected.kind);
+}
+
 void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
   switch (actual.kind) {
@@ -42,6 +48,9 @@ void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
     return smith_assert_int_equal(actual.value.int_, expected.value.int_);
   case SMITH_TOKEN_KIND_FLOAT:
     return smith_assert_float_equal(actual.value.float_, expected.value.float_);
+  case SMITH_TOKEN_KIND_OPERATOR:
+    return smith_assert_operator_equal(actual.value.operator,
+                                       expected.value.operator);
   default:
     munit_assert(false);
   }

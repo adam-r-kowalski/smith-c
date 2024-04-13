@@ -59,7 +59,7 @@ smith_string_t smith_random_float(smith_allocator_t allocator) {
   for (size_t i = 0; i < length; i++) {
     data[i] = munit_rand_int_range('0', '9');
   }
-  data[munit_rand_int_range(0, length)] = '.';
+  data[munit_rand_int_range(0, length - 1)] = '.';
   data[length] = '\0';
   return (smith_string_t){.data = data, .length = length};
 }

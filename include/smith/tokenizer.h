@@ -19,7 +19,7 @@ typedef struct {
 } smith_int_t;
 
 typedef enum {
-  SMITH_OPERATOR_KIND_PLUS,
+  SMITH_OPERATOR_KIND_ADD,
 } smith_operator_kind_t;
 
 typedef struct {

@@ -71,6 +71,27 @@ static MunitResult test_smith_tokenize_float(const MunitParameter params[],
   return MUNIT_OK;
 }
 
+static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
+                                                void *user_data_or_fixture) {
+  smith_allocator_t allocator = smith_system_allocator_create();
+  smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_string_t operators[] = {{"+", 1}};
+  smith_operator_kind_t kinds[] = {SMITH_OPERATOR_KIND_ADD};
+  for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
+    smith_cursor_t cursor = {.source = operators[i].data};
+    smith_next_token_result_t actual = smith_next_token(interner, cursor);
+    smith_position_t end = {.column = operators[i].length};
+    smith_next_token_result_t expected = {
+        .token = {.kind = SMITH_TOKEN_KIND_OPERATOR,
+                  .value.operator= {.kind = kinds[i], .span.end = end} },
+                  .cursor = {.source = "", .position = end}};
+    smith_assert_next_token_result_equal(actual, expected);
+  }
+  smith_interner_destroy(interner);
+  smith_allocator_destroy(allocator);
+  return MUNIT_OK;
+}
+
 static MunitTest smith_tokenizer_tests[] = {
     {
         .name = "/test_smith_tokenize_symbol",
@@ -83,6 +104,10 @@ static MunitTest smith_tokenizer_tests[] = {
     {
         .name = "/test_smith_tokenize_float",
         .test = test_smith_tokenize_float,
+    },
+    {
+        .name = "/test_smith_tokenize_operator",
+        .test = test_smith_tokenize_operator,
     },
     {}};
 
