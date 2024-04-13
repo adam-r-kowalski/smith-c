@@ -51,3 +51,15 @@ smith_string_t smith_random_int(smith_allocator_t allocator) {
   data[length] = '\0';
   return (smith_string_t){.data = data, .length = length};
 }
+
+smith_string_t smith_random_float(smith_allocator_t allocator) {
+  size_t length = munit_rand_int_range(MIN_LENGTH, MAX_LENGTH);
+  char *data = smith_allocator_allocate_array(allocator, char, length + 1);
+  munit_assert(data != nullptr);
+  for (size_t i = 0; i < length; i++) {
+    data[i] = munit_rand_int_range('0', '9');
+  }
+  data[munit_rand_int_range(0, length)] = '.';
+  data[length] = '\0';
+  return (smith_string_t){.data = data, .length = length};
+}
