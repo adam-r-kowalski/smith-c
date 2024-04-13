@@ -42,6 +42,24 @@ static smith_next_token_result_t tokenize_symbol(smith_interner_t intener,
   };
 }
 
+static bool is_numeric(char c) { return c >= '0' && c <= '9'; }
+
+static smith_next_token_result_t tokenize_int(smith_interner_t intener,
+                                              smith_cursor_t cursor) {
+  take_while_result_t take_while_result = take_while(cursor, is_numeric);
+  smith_intern_result_t intern_result =
+      smith_interner_intern(intener, take_while_result.string);
+  assert(intern_result.success);
+  return (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_INT,
+                .value = {.int_ = {.interned = intern_result.interned,
+                                   .span = {.start = cursor.position,
+                                            .end = take_while_result.cursor
+                                                       .position}}}},
+      .cursor = take_while_result.cursor,
+  };
+}
+
 smith_next_token_result_t smith_next_token(smith_interner_t intener,
                                            smith_cursor_t cursor) {
   if (cursor.source[0] == '\0') {
@@ -57,5 +75,9 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   case 'A' ... 'Z':
   case '_':
     return tokenize_symbol(intener, cursor);
+  case '0' ... '9':
+    return tokenize_int(intener, cursor);
+  default:
+    assert(false);
   }
 }

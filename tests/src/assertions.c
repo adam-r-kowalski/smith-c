@@ -22,12 +22,19 @@ void smith_assert_symbol_equal(smith_symbol_t actual, smith_symbol_t expected) {
   munit_assert_int(actual.interned, ==, expected.interned);
 }
 
+void smith_assert_int_equal(smith_int_t actual, smith_int_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.interned, ==, expected.interned);
+}
+
 void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
   switch (actual.kind) {
   case SMITH_TOKEN_KIND_SYMBOL:
     return smith_assert_symbol_equal(actual.value.symbol,
                                      expected.value.symbol);
+  case SMITH_TOKEN_KIND_INT:
+    return smith_assert_int_equal(actual.value.int_, expected.value.int_);
   default:
     munit_assert(false);
   }
