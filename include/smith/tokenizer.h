@@ -53,7 +53,7 @@ typedef union {
   smith_symbol_t symbol;
   smith_float_t float_;
   smith_int_t int_;
-  smith_operator_t operator;
+  smith_operator_t operator_;
   smith_delimiter_t delimiter;
   smith_end_of_file_t end_of_file;
 } smith_token_value_t;

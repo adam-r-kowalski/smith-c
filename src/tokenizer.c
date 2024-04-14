@@ -110,14 +110,26 @@ static smith_next_token_result_t tokenize_operator(smith_cursor_t cursor,
   smith_position_t end = {.line = cursor.position.line,
                           .column = cursor.position.column + length};
   return (smith_next_token_result_t){
-      .token =
-          {
-              .kind = SMITH_TOKEN_KIND_OPERATOR,
-              .value.operator= {
-                  .kind = kind,
-                  .span = {.start = cursor.position, .end = end}} },
-              .cursor = {.source = cursor.source + length, .position = end},
-      };
+      .token = {.kind = SMITH_TOKEN_KIND_OPERATOR,
+                .value.operator_ = {.kind = kind,
+                                    .span = {.start = cursor.position,
+                                             .end = end}}},
+      .cursor = {.source = cursor.source + length, .position = end},
+  };
+}
+
+static smith_next_token_result_t tokenize_delimiter(smith_cursor_t cursor,
+                                                    smith_delimiter_kind_t kind,
+                                                    size_t length) {
+  smith_position_t end = {.line = cursor.position.line,
+                          .column = cursor.position.column + length};
+  return (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
+                .value.delimiter = {.kind = kind,
+                                    .span = {.start = cursor.position,
+                                             .end = end}}},
+      .cursor = {.source = cursor.source + length, .position = end},
+  };
 }
 
 smith_next_token_result_t smith_next_token(smith_interner_t intener,
@@ -141,6 +153,8 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
     return tokenize_number(intener, cursor, 1);
   case '+':
     return tokenize_operator(cursor, SMITH_OPERATOR_KIND_ADD, 1);
+  case '(':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_PAREN, 1);
   default:
     assert(false);
   }

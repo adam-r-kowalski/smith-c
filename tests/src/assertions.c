@@ -38,6 +38,12 @@ void smith_assert_operator_equal(smith_operator_t actual,
   munit_assert_int(actual.kind, ==, expected.kind);
 }
 
+void smith_assert_delimiter_equal(smith_delimiter_t actual,
+                                  smith_delimiter_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.kind, ==, expected.kind);
+}
+
 void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
   switch (actual.kind) {
@@ -49,8 +55,11 @@ void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   case SMITH_TOKEN_KIND_FLOAT:
     return smith_assert_float_equal(actual.value.float_, expected.value.float_);
   case SMITH_TOKEN_KIND_OPERATOR:
-    return smith_assert_operator_equal(actual.value.operator,
-                                       expected.value.operator);
+    return smith_assert_operator_equal(actual.value.operator_,
+                                       expected.value.operator_);
+  case SMITH_TOKEN_KIND_DELIMITER:
+    return smith_assert_delimiter_equal(actual.value.delimiter,
+                                        expected.value.delimiter);
   default:
     munit_assert(false);
   }
