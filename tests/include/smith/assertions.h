@@ -21,6 +21,9 @@ void smith_assert_operator_equal(smith_operator_t actual,
 void smith_assert_delimiter_equal(smith_delimiter_t actual,
                                   smith_delimiter_t expected);
 
+void smith_assert_end_of_file_equal(smith_end_of_file_t actual,
+                                    smith_end_of_file_t expected);
+
 void smith_assert_token_equal(smith_token_t actual, smith_token_t expected);
 
 void smith_assert_next_token_result_equal(smith_next_token_result_t actual,
