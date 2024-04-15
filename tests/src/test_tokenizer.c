@@ -268,6 +268,13 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
       .cursor = {.source = "", .position = {.line = 2, .column = 1}}};
   smith_assert_next_token_result_equal(actual, expected);
 
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,
+                .value.end_of_file = {.span = {.start = {.line = 2,
+                                                         .column = 1}}}},
+      .cursor = {.source = "", .position = {.line = 2, .column = 1}}};
+
   smith_interner_destroy(interner);
   smith_allocator_destroy(allocator);
   return MUNIT_OK;
