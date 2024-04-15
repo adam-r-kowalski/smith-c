@@ -61,6 +61,15 @@ typedef struct {
   smith_delimiter_kind_t kind;
 } smith_delimiter_t;
 
+typedef enum {
+  SMITH_KEYWORD_KIND_FN,
+} smith_keyword_kind_t;
+
+typedef struct {
+  smith_span_t span;
+  smith_keyword_kind_t kind;
+} smith_keyword_t;
+
 typedef struct {
   smith_span_t span;
 } smith_end_of_file_t;
@@ -96,6 +105,7 @@ typedef enum {
   SMITH_TOKEN_KIND_INT,
   SMITH_TOKEN_KIND_OPERATOR,
   SMITH_TOKEN_KIND_DELIMITER,
+  SMITH_TOKEN_KIND_KEYWORD,
   SMITH_TOKEN_KIND_END_OF_FILE,
   SMITH_TOKEN_KIND_ERROR,
 } smith_token_kind_t;
@@ -106,6 +116,7 @@ typedef union {
   smith_int_t int_;
   smith_operator_t operator_;
   smith_delimiter_t delimiter;
+  smith_keyword_t keyword;
   smith_end_of_file_t end_of_file;
   smith_error_t error;
 } smith_token_value_t;
@@ -116,9 +127,16 @@ typedef struct {
 } smith_token_t;
 
 typedef struct {
+  smith_interned_t fn;
+} smith_keywords_t;
+
+typedef struct {
   smith_token_t token;
   smith_cursor_t cursor;
 } smith_next_token_result_t;
 
+smith_keywords_t smith_keywords_create(smith_interner_t interner);
+
 smith_next_token_result_t smith_next_token(smith_interner_t interner,
-                                           smith_cursor_t cursor);
+                                           smith_cursor_t cursor,
+                                           smith_keywords_t keywords);

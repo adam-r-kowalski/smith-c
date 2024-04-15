@@ -1,6 +1,7 @@
 #define SMITH_ENABLE_ALLOCATOR_MACROS
 
 #include "smith/assertions.h"
+#include "smith/format.h"
 #include "smith/hash_interner.h"
 #include "smith/random.h"
 #include "smith/string.h"
@@ -12,11 +13,13 @@ static MunitResult test_smith_tokenize_symbol(const MunitParameter params[],
                                               void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t symbol = smith_random_symbol(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
-  smith_next_token_result_t actual = smith_next_token(interner, cursor);
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
@@ -33,11 +36,13 @@ static MunitResult test_smith_tokenize_int(const MunitParameter params[],
                                            void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t symbol = smith_random_int(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
-  smith_next_token_result_t actual = smith_next_token(interner, cursor);
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_INT,
@@ -54,11 +59,13 @@ static MunitResult test_smith_tokenize_float(const MunitParameter params[],
                                              void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t symbol = smith_random_float(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
-  smith_next_token_result_t actual = smith_next_token(interner, cursor);
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_FLOAT,
@@ -75,6 +82,7 @@ static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
                                                 void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t operators[] = {
       {"+", 1},  {"+=", 2}, {"-", 1},  {"-=", 2}, {"*", 1},
       {"*=", 2}, {"/", 1},  {"/=", 2}, {"=", 1},  {"==", 2},
@@ -95,7 +103,8 @@ static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
   };
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
-    smith_next_token_result_t actual = smith_next_token(interner, cursor);
+    smith_next_token_result_t actual =
+        smith_next_token(interner, cursor, keywords);
     smith_position_t end = {.column = operators[i].length};
     smith_next_token_result_t expected = {
         .token = {.kind = SMITH_TOKEN_KIND_OPERATOR,
@@ -112,6 +121,7 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
                                                  void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t operators[] = {{"(", 1}, {")", 1}, {"{", 1}, {"}", 1},
                                 {"[", 1}, {"]", 1}, {",", 1}};
   smith_delimiter_kind_t kinds[] = {
@@ -122,7 +132,8 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
   };
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
-    smith_next_token_result_t actual = smith_next_token(interner, cursor);
+    smith_next_token_result_t actual =
+        smith_next_token(interner, cursor, keywords);
     smith_position_t end = {.column = operators[i].length};
     smith_next_token_result_t expected = {
         .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
@@ -140,8 +151,10 @@ test_smith_tokenize_empty_string(const MunitParameter params[],
                                  void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_cursor_t cursor = {.source = ""};
-  smith_next_token_result_t actual = smith_next_token(interner, cursor);
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
   smith_next_token_result_t expected = {
       .token.kind = SMITH_TOKEN_KIND_END_OF_FILE, .cursor.source = ""};
   smith_assert_next_token_result_equal(actual, expected);
@@ -155,14 +168,42 @@ test_smith_tokenize_invalid_token(const MunitParameter params[],
                                   void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
   smith_cursor_t cursor = {.source = ";"};
-  smith_next_token_result_t actual = smith_next_token(interner, cursor);
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_ERROR,
                 .value.error = {.kind = SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
                                 .value.unexpected_character = {.character =
                                                                    ';'}}},
       .cursor = {.source = "", .position.column = 1}};
+  smith_assert_next_token_result_equal(actual, expected);
+  smith_interner_destroy(interner);
+  smith_allocator_destroy(allocator);
+  return MUNIT_OK;
+}
+
+static MunitResult test_smith_tokenize_function(const MunitParameter params[],
+                                                void *user_data_or_fixture) {
+  smith_allocator_t allocator = smith_system_allocator_create();
+  smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_string_t function_name = smith_random_symbol(allocator);
+  char *format_string = "fn %s() {\n"
+                        "\n"
+                        "}";
+  char *source =
+      smith_format_string(allocator, format_string, function_name.data);
+  smith_cursor_t cursor = {.source = source};
+  smith_next_token_result_t actual =
+      smith_next_token(interner, cursor, keywords);
+  char *remaining_source = source + 2;
+  smith_next_token_result_t expected = {
+      .token = {.kind = SMITH_TOKEN_KIND_KEYWORD,
+                .value.keyword = {.kind = SMITH_KEYWORD_KIND_FN,
+                                  .span.end.column = 2}},
+      .cursor = {.source = remaining_source, .position.column = 2}};
   smith_assert_next_token_result_equal(actual, expected);
   smith_interner_destroy(interner);
   smith_allocator_destroy(allocator);
@@ -197,6 +238,10 @@ static MunitTest smith_tokenizer_tests[] = {
     {
         .name = "/test_smith_tokenize_invalid_token",
         .test = test_smith_tokenize_invalid_token,
+    },
+    {
+        .name = "/test_smith_tokenize_function",
+        .test = test_smith_tokenize_function,
     },
     {}};
 

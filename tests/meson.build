@@ -14,7 +14,8 @@ test_executable = executable(
     '../src/finite_allocator.c',
     '../src/allocator.c',
     '../src/hash_interner.c',
-    '../src/interner.c'
+    '../src/interner.c',
+    '../src/format.c'
   ],
   dependencies : munit_dep,
   include_directories : [

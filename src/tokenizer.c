@@ -1,4 +1,8 @@
+#define SMITH_ENABLE_ALLOCATOR_MACROS
+
 #include "smith/tokenizer.h"
+#include "smith/interner.h"
+#include <assert.h>
 
 typedef struct {
   smith_string_t string;
@@ -49,27 +53,38 @@ static bool is_symbol_char(char c) {
 }
 
 static smith_next_token_result_t tokenize_symbol(smith_interner_t intener,
-                                                 smith_cursor_t cursor) {
+                                                 smith_cursor_t cursor,
+                                                 smith_keywords_t keywords) {
   take_while_result_t take_while_result = take_while(cursor, is_symbol_char);
   smith_intern_result_t intern_result =
       smith_interner_intern(intener, take_while_result.string);
   if (intern_result.success) {
+    smith_span_t span = {.start = cursor.position,
+                         .end = take_while_result.cursor.position};
+    if (intern_result.interned == keywords.fn) {
+      return (smith_next_token_result_t){
+          .token = {.kind = SMITH_TOKEN_KIND_KEYWORD,
+                    .value.keyword = {.kind = SMITH_KEYWORD_KIND_FN,
+                                      .span = span}},
+          .cursor = take_while_result.cursor,
+      };
+    }
     return (smith_next_token_result_t){
         .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
-                  .value = {.symbol = {.interned = intern_result.interned,
-                                       .span = {.start = cursor.position,
-                                                .end = take_while_result.cursor
-                                                           .position}}}},
+                  .value.symbol = {.interned = intern_result.interned,
+                                   .span = span}},
         .cursor = take_while_result.cursor,
     };
   }
   return (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_ERROR,
-                .value = {.error = {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
-                                    .value = {.interning_failed =
-          {.string = take_while_result.string,
-           .span = {.start = cursor.position,
-                    .end = take_while_result.cursor.position}}}}}},
+                .value.error =
+                    {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
+                     .value = {.interning_failed =
+                                   {.string = take_while_result.string,
+                                    .span = {.start = cursor.position,
+                                             .end = take_while_result.cursor
+                                                        .position}}}}},
       .cursor = take_while_result.cursor,
   };
 }
@@ -172,12 +187,22 @@ tokenize_unexpected_character(smith_cursor_t cursor, char c) {
   };
 }
 
+smith_keywords_t smith_keywords_create(smith_interner_t interner) {
+  smith_keywords_t keywords;
+  smith_intern_result_t intern_result = smith_interner_intern(
+      interner, (smith_string_t){.data = "fn", .length = 2});
+  assert(intern_result.success);
+  keywords.fn = intern_result.interned;
+  return keywords;
+}
+
 #define tokenize_operator(kind, next_char, next_kind)                          \
   tokenize_operator(cursor, SMITH_OPERATOR_KIND_##kind, next_char,             \
                     SMITH_OPERATOR_KIND_##next_kind)
 
 smith_next_token_result_t smith_next_token(smith_interner_t intener,
-                                           smith_cursor_t cursor) {
+                                           smith_cursor_t cursor,
+                                           smith_keywords_t keywords) {
   if (cursor.source[0] == '\0') {
     return (smith_next_token_result_t){
         .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,
@@ -190,7 +215,7 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   case 'a' ... 'z':
   case 'A' ... 'Z':
   case '_':
-    return tokenize_symbol(intener, cursor);
+    return tokenize_symbol(intener, cursor, keywords);
   case '0' ... '9':
     return tokenize_number(intener, cursor, 0);
   case '.':

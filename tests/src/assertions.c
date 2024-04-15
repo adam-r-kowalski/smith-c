@@ -44,6 +44,12 @@ void smith_assert_delimiter_equal(smith_delimiter_t actual,
   munit_assert_int(actual.kind, ==, expected.kind);
 }
 
+void smith_assert_keyword_equal(smith_keyword_t actual,
+                                smith_keyword_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.kind, ==, expected.kind);
+}
+
 void smith_assert_end_of_file_equal(smith_end_of_file_t actual,
                                     smith_end_of_file_t expected) {
   smith_assert_span_equal(actual.span, expected.span);
@@ -91,6 +97,9 @@ void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   case SMITH_TOKEN_KIND_DELIMITER:
     return smith_assert_delimiter_equal(actual.value.delimiter,
                                         expected.value.delimiter);
+  case SMITH_TOKEN_KIND_KEYWORD:
+    return smith_assert_keyword_equal(actual.value.keyword,
+                                      expected.value.keyword);
   case SMITH_TOKEN_KIND_END_OF_FILE:
     return smith_assert_end_of_file_equal(actual.value.end_of_file,
                                           expected.value.end_of_file);
