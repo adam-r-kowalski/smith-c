@@ -49,6 +49,32 @@ void smith_assert_end_of_file_equal(smith_end_of_file_t actual,
   smith_assert_span_equal(actual.span, expected.span);
 }
 
+void smith_assert_unexpected_character_equal(
+    smith_unexpected_character_t actual,
+    smith_unexpected_character_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_char(actual.character, ==, expected.character);
+}
+
+void smith_assert_interning_failed_equal(smith_interning_failed_t actual,
+                                         smith_interning_failed_t expected) {
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.string.length, ==, expected.string.length);
+  munit_assert_string_equal(actual.string.data, expected.string.data);
+}
+
+void smith_assert_error_equal(smith_error_t actual, smith_error_t expected) {
+  munit_assert_int(actual.kind, ==, expected.kind);
+  switch (actual.kind) {
+  case SMITH_ERROR_KIND_UNEXPECTED_CHARACTER:
+    return smith_assert_unexpected_character_equal(
+        actual.value.unexpected_character, expected.value.unexpected_character);
+  case SMITH_ERROR_KIND_INTERING_FAILED:
+    return smith_assert_interning_failed_equal(actual.value.interning_failed,
+                                               expected.value.interning_failed);
+  }
+}
+
 void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
   switch (actual.kind) {
@@ -68,6 +94,8 @@ void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   case SMITH_TOKEN_KIND_END_OF_FILE:
     return smith_assert_end_of_file_equal(actual.value.end_of_file,
                                           expected.value.end_of_file);
+  case SMITH_TOKEN_KIND_ERROR:
+    return smith_assert_error_equal(actual.value.error, expected.value.error);
   }
 }
 

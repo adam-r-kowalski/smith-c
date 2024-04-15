@@ -65,6 +65,31 @@ typedef struct {
   smith_span_t span;
 } smith_end_of_file_t;
 
+typedef struct {
+  smith_span_t span;
+  char character;
+} smith_unexpected_character_t;
+
+typedef struct {
+  smith_span_t span;
+  smith_string_t string;
+} smith_interning_failed_t;
+
+typedef enum {
+  SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
+  SMITH_ERROR_KIND_INTERING_FAILED,
+} smith_error_kind_t;
+
+typedef union {
+  smith_unexpected_character_t unexpected_character;
+  smith_interning_failed_t interning_failed;
+} smith_error_value_t;
+
+typedef struct {
+  smith_error_kind_t kind;
+  smith_error_value_t value;
+} smith_error_t;
+
 typedef enum {
   SMITH_TOKEN_KIND_SYMBOL,
   SMITH_TOKEN_KIND_FLOAT,
@@ -72,6 +97,7 @@ typedef enum {
   SMITH_TOKEN_KIND_OPERATOR,
   SMITH_TOKEN_KIND_DELIMITER,
   SMITH_TOKEN_KIND_END_OF_FILE,
+  SMITH_TOKEN_KIND_ERROR,
 } smith_token_kind_t;
 
 typedef union {
@@ -81,6 +107,7 @@ typedef union {
   smith_operator_t operator_;
   smith_delimiter_t delimiter;
   smith_end_of_file_t end_of_file;
+  smith_error_t error;
 } smith_token_value_t;
 
 typedef struct {

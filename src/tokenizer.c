@@ -1,5 +1,4 @@
 #include "smith/tokenizer.h"
-#include <assert.h>
 
 typedef struct {
   smith_string_t string;
@@ -54,13 +53,23 @@ static smith_next_token_result_t tokenize_symbol(smith_interner_t intener,
   take_while_result_t take_while_result = take_while(cursor, is_symbol_char);
   smith_intern_result_t intern_result =
       smith_interner_intern(intener, take_while_result.string);
-  assert(intern_result.success);
+  if (intern_result.success) {
+    return (smith_next_token_result_t){
+        .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
+                  .value = {.symbol = {.interned = intern_result.interned,
+                                       .span = {.start = cursor.position,
+                                                .end = take_while_result.cursor
+                                                           .position}}}},
+        .cursor = take_while_result.cursor,
+    };
+  }
   return (smith_next_token_result_t){
-      .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
-                .value = {.symbol = {.interned = intern_result.interned,
-                                     .span = {.start = cursor.position,
-                                              .end = take_while_result.cursor
-                                                         .position}}}},
+      .token = {.kind = SMITH_TOKEN_KIND_ERROR,
+                .value = {.error = {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
+                                    .value = {.interning_failed =
+          {.string = take_while_result.string,
+           .span = {.start = cursor.position,
+                    .end = take_while_result.cursor.position}}}}}},
       .cursor = take_while_result.cursor,
   };
 }
@@ -85,7 +94,17 @@ static smith_next_token_result_t tokenize_number(smith_interner_t intener,
       take_while_stateful(cursor, is_numeric, &decimals);
   smith_intern_result_t intern_result =
       smith_interner_intern(intener, take_while_result.string);
-  assert(intern_result.success);
+  if (!intern_result.success) {
+    return (smith_next_token_result_t){
+        .token =
+            {.kind = SMITH_TOKEN_KIND_ERROR,
+             .value = {.error = {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
+                                 .value = {.interning_failed =
+            {.string = take_while_result.string, .span = {.start = cursor.position,
+                                                         .end = take_while_result.cursor.position}}}}}},
+        .cursor = take_while_result.cursor,
+    };
+  }
   smith_span_t span = {.start = cursor.position,
                        .end = take_while_result.cursor.position};
   if (decimals >= 1) {
@@ -133,6 +152,23 @@ tokenize_delimiter(smith_cursor_t cursor, smith_delimiter_kind_t kind) {
                                     .span = {.start = cursor.position,
                                              .end = end}}},
       .cursor = {.source = cursor.source + 1, .position = end},
+  };
+}
+
+static smith_next_token_result_t
+tokenize_unexpected_character(smith_cursor_t cursor, char c) {
+  return (smith_next_token_result_t){
+      .token =
+          {.kind = SMITH_TOKEN_KIND_ERROR,
+           .value =
+               {.error = {.kind = SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
+                          .value = {.unexpected_character =
+                                        {.character = c,
+                                         .span = {.start = cursor.position,
+                                                  .end = cursor.position}}}}}},
+      .cursor = {.source = cursor.source + 1,
+                 .position = {.line = cursor.position.line,
+                              .column = cursor.position.column + 1}},
   };
 }
 
@@ -194,7 +230,7 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   case ',':
     return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_COMMA);
   default:
-    assert(false);
+    return tokenize_unexpected_character(cursor, cursor.source[0]);
   }
 }
 
