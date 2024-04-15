@@ -75,8 +75,24 @@ static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
                                                 void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_string_t operators[] = {{"+", 1}};
-  smith_operator_kind_t kinds[] = {SMITH_OPERATOR_KIND_ADD};
+  smith_string_t operators[] = {
+      {"+", 1},  {"+=", 2}, {"-", 1},  {"-=", 2}, {"*", 1},
+      {"*=", 2}, {"/", 1},  {"/=", 2}, {"=", 1},  {"==", 2},
+      {"!", 1},  {"!=", 2}, {"<", 1},  {"<=", 2}, {">", 1},
+      {">=", 2}, {"&", 1},  {"&&", 2}, {"|", 1},  {"||", 2},
+  };
+  smith_operator_kind_t kinds[] = {
+      SMITH_OPERATOR_KIND_ADD,     SMITH_OPERATOR_KIND_ADD_ASSIGN,
+      SMITH_OPERATOR_KIND_SUB,     SMITH_OPERATOR_KIND_SUB_ASSIGN,
+      SMITH_OPERATOR_KIND_MUL,     SMITH_OPERATOR_KIND_MUL_ASSIGN,
+      SMITH_OPERATOR_KIND_DIV,     SMITH_OPERATOR_KIND_DIV_ASSIGN,
+      SMITH_OPERATOR_KIND_ASSIGN,  SMITH_OPERATOR_KIND_EQ,
+      SMITH_OPERATOR_KIND_NOT,     SMITH_OPERATOR_KIND_NOT_EQ,
+      SMITH_OPERATOR_KIND_LT,      SMITH_OPERATOR_KIND_LE,
+      SMITH_OPERATOR_KIND_GT,      SMITH_OPERATOR_KIND_GE,
+      SMITH_OPERATOR_KIND_BIT_AND, SMITH_OPERATOR_KIND_AND,
+      SMITH_OPERATOR_KIND_BIT_OR,  SMITH_OPERATOR_KIND_OR,
+  };
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
     smith_next_token_result_t actual = smith_next_token(interner, cursor);

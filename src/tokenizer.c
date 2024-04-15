@@ -104,9 +104,14 @@ static smith_next_token_result_t tokenize_number(smith_interner_t intener,
   };
 }
 
-static smith_next_token_result_t tokenize_operator(smith_cursor_t cursor,
-                                                   smith_operator_kind_t kind,
-                                                   size_t length) {
+static smith_next_token_result_t
+tokenize_operator(smith_cursor_t cursor, smith_operator_kind_t kind, char next,
+                  smith_operator_kind_t next_kind) {
+  size_t length = 1;
+  if (cursor.source[length] == next) {
+    length = 2;
+    kind = next_kind;
+  }
   smith_position_t end = {.line = cursor.position.line,
                           .column = cursor.position.column + length};
   return (smith_next_token_result_t){
@@ -132,6 +137,10 @@ static smith_next_token_result_t tokenize_delimiter(smith_cursor_t cursor,
   };
 }
 
+#define tokenize_operator(kind, next_char, next_kind)                          \
+  tokenize_operator(cursor, SMITH_OPERATOR_KIND_##kind, next_char,             \
+                    SMITH_OPERATOR_KIND_##next_kind)
+
 smith_next_token_result_t smith_next_token(smith_interner_t intener,
                                            smith_cursor_t cursor) {
   if (cursor.source[0] == '\0') {
@@ -142,6 +151,7 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
         .cursor = cursor,
     };
   }
+
   switch (cursor.source[0]) {
   case 'a' ... 'z':
   case 'A' ... 'Z':
@@ -152,10 +162,30 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   case '.':
     return tokenize_number(intener, cursor, 1);
   case '+':
-    return tokenize_operator(cursor, SMITH_OPERATOR_KIND_ADD, 1);
+    return tokenize_operator(ADD, '=', ADD_ASSIGN);
+  case '-':
+    return tokenize_operator(SUB, '=', SUB_ASSIGN);
+  case '*':
+    return tokenize_operator(MUL, '=', MUL_ASSIGN);
+  case '/':
+    return tokenize_operator(DIV, '=', DIV_ASSIGN);
+  case '=':
+    return tokenize_operator(ASSIGN, '=', EQ);
+  case '!':
+    return tokenize_operator(NOT, '=', NOT_EQ);
+  case '<':
+    return tokenize_operator(LT, '=', LE);
+  case '>':
+    return tokenize_operator(GT, '=', GE);
+  case '&':
+    return tokenize_operator(BIT_AND, '&', AND);
+  case '|':
+    return tokenize_operator(BIT_OR, '|', OR);
   case '(':
     return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_PAREN, 1);
   default:
     assert(false);
   }
 }
+
+#undef tokenize_operator

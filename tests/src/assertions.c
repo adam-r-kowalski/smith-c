@@ -68,8 +68,6 @@ void smith_assert_token_equal(smith_token_t actual, smith_token_t expected) {
   case SMITH_TOKEN_KIND_END_OF_FILE:
     return smith_assert_end_of_file_equal(actual.value.end_of_file,
                                           expected.value.end_of_file);
-  default:
-    munit_assert(false);
   }
 }
 
