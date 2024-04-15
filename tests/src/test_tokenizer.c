@@ -146,6 +146,32 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
   return MUNIT_OK;
 }
 
+static MunitResult test_smith_tokenize_keyword(const MunitParameter params[],
+                                               void *user_data_or_fixture) {
+  smith_allocator_t allocator = smith_system_allocator_create();
+  smith_interner_t interner = smith_hash_interner_create(allocator);
+  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_string_t keyword_strings[] = {{"fn", 2}};
+  smith_keyword_kind_t kinds[] = {
+      SMITH_KEYWORD_KIND_FN,
+  };
+  for (size_t i = 0; i < sizeof(keyword_strings) / sizeof(keyword_strings[0]);
+       i++) {
+    smith_cursor_t cursor = {.source = keyword_strings[i].data};
+    smith_next_token_result_t actual =
+        smith_next_token(interner, cursor, keywords);
+    smith_position_t end = {.column = keyword_strings[i].length};
+    smith_next_token_result_t expected = {
+        .token = {.kind = SMITH_TOKEN_KIND_KEYWORD,
+                  .value.keyword = {.kind = kinds[i], .span.end = end}},
+        .cursor = {.source = "", .position = end}};
+    smith_assert_next_token_result_equal(actual, expected);
+  }
+  smith_interner_destroy(interner);
+  smith_allocator_destroy(allocator);
+  return MUNIT_OK;
+}
+
 static MunitResult
 test_smith_tokenize_empty_string(const MunitParameter params[],
                                  void *user_data_or_fixture) {
@@ -271,8 +297,7 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   actual = smith_next_token(interner, actual.cursor, keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,
-                .value.end_of_file = {.span = {.start = {.line = 2,
-                                                         .column = 1}}}},
+                .value.end_of_file.span.start = {.line = 2, .column = 1}},
       .cursor = {.source = "", .position = {.line = 2, .column = 1}}};
 
   smith_interner_destroy(interner);
@@ -300,6 +325,10 @@ static MunitTest smith_tokenizer_tests[] = {
     {
         .name = "/test_smith_tokenize_delimiter",
         .test = test_smith_tokenize_delimiter,
+    },
+    {
+        .name = "/test_smith_tokenize_keyword",
+        .test = test_smith_tokenize_keyword,
     },
     {
         .name = "/test_smith_tokenize_empty_string",

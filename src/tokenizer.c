@@ -173,14 +173,12 @@ tokenize_delimiter(smith_cursor_t cursor, smith_delimiter_kind_t kind) {
 static smith_next_token_result_t
 tokenize_unexpected_character(smith_cursor_t cursor, char c) {
   return (smith_next_token_result_t){
-      .token =
-          {.kind = SMITH_TOKEN_KIND_ERROR,
-           .value =
-               {.error = {.kind = SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
-                          .value = {.unexpected_character =
-                                        {.character = c,
-                                         .span = {.start = cursor.position,
-                                                  .end = cursor.position}}}}}},
+      .token = {.kind = SMITH_TOKEN_KIND_ERROR,
+                .value.error = {.kind = SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
+                                .value.unexpected_character =
+                                    {.character = c,
+                                     .span = {.start = cursor.position,
+                                              .end = cursor.position}}}},
       .cursor = {.source = cursor.source + 1,
                  .position = {.line = cursor.position.line,
                               .column = cursor.position.column + 1}},
@@ -197,7 +195,6 @@ smith_keywords_t smith_keywords_create(smith_interner_t interner) {
 }
 
 smith_cursor_t trim_whitespace(smith_cursor_t cursor) {
-  assert(cursor.source != nullptr);
   while (true) {
     switch (*cursor.source) {
     case ' ':
