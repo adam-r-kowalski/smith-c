@@ -112,8 +112,14 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
                                                  void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_string_t operators[] = {{"(", 1}};
-  smith_delimiter_kind_t kinds[] = {SMITH_DELIMITER_KIND_OPEN_PAREN};
+  smith_string_t operators[] = {{"(", 1}, {")", 1}, {"{", 1}, {"}", 1},
+                                {"[", 1}, {"]", 1}, {",", 1}};
+  smith_delimiter_kind_t kinds[] = {
+      SMITH_DELIMITER_KIND_OPEN_PAREN,   SMITH_DELIMITER_KIND_CLOSE_PAREN,
+      SMITH_DELIMITER_KIND_OPEN_BRACE,   SMITH_DELIMITER_KIND_CLOSE_BRACE,
+      SMITH_DELIMITER_KIND_OPEN_BRACKET, SMITH_DELIMITER_KIND_CLOSE_BRACKET,
+      SMITH_DELIMITER_KIND_COMMA,
+  };
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
     smith_next_token_result_t actual = smith_next_token(interner, cursor);

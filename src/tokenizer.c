@@ -123,17 +123,16 @@ tokenize_operator(smith_cursor_t cursor, smith_operator_kind_t kind, char next,
   };
 }
 
-static smith_next_token_result_t tokenize_delimiter(smith_cursor_t cursor,
-                                                    smith_delimiter_kind_t kind,
-                                                    size_t length) {
+static smith_next_token_result_t
+tokenize_delimiter(smith_cursor_t cursor, smith_delimiter_kind_t kind) {
   smith_position_t end = {.line = cursor.position.line,
-                          .column = cursor.position.column + length};
+                          .column = cursor.position.column + 1};
   return (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
                 .value.delimiter = {.kind = kind,
                                     .span = {.start = cursor.position,
                                              .end = end}}},
-      .cursor = {.source = cursor.source + length, .position = end},
+      .cursor = {.source = cursor.source + 1, .position = end},
   };
 }
 
@@ -151,7 +150,6 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
         .cursor = cursor,
     };
   }
-
   switch (cursor.source[0]) {
   case 'a' ... 'z':
   case 'A' ... 'Z':
@@ -182,7 +180,19 @@ smith_next_token_result_t smith_next_token(smith_interner_t intener,
   case '|':
     return tokenize_operator(BIT_OR, '|', OR);
   case '(':
-    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_PAREN, 1);
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_PAREN);
+  case ')':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_CLOSE_PAREN);
+  case '{':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_BRACE);
+  case '}':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_CLOSE_BRACE);
+  case '[':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_OPEN_BRACKET);
+  case ']':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_CLOSE_BRACKET);
+  case ',':
+    return tokenize_delimiter(cursor, SMITH_DELIMITER_KIND_COMMA);
   default:
     assert(false);
   }
