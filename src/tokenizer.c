@@ -196,6 +196,25 @@ smith_keywords_t smith_keywords_create(smith_interner_t interner) {
   return keywords;
 }
 
+smith_cursor_t trim_whitespace(smith_cursor_t cursor) {
+  assert(cursor.source != nullptr);
+  while (true) {
+    switch (*cursor.source) {
+    case ' ':
+    case '\t':
+      cursor.position.column++;
+      break;
+    case '\n':
+      cursor.position.line++;
+      cursor.position.column = 0;
+      break;
+    default:
+      return cursor;
+    }
+    cursor.source++;
+  }
+}
+
 #define tokenize_operator(kind, next_char, next_kind)                          \
   tokenize_operator(cursor, SMITH_OPERATOR_KIND_##kind, next_char,             \
                     SMITH_OPERATOR_KIND_##next_kind)
@@ -203,6 +222,7 @@ smith_keywords_t smith_keywords_create(smith_interner_t interner) {
 smith_next_token_result_t smith_next_token(smith_interner_t intener,
                                            smith_cursor_t cursor,
                                            smith_keywords_t keywords) {
+  cursor = trim_whitespace(cursor);
   if (cursor.source[0] == '\0') {
     return (smith_next_token_result_t){
         .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,

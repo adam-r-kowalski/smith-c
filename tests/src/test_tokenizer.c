@@ -190,6 +190,10 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   smith_interner_t interner = smith_hash_interner_create(allocator);
   smith_keywords_t keywords = smith_keywords_create(interner);
   smith_string_t function_name = smith_random_symbol(allocator);
+  smith_intern_result_t intern_result =
+      smith_interner_intern(interner, function_name);
+  munit_assert(intern_result.success);
+  smith_interned_t interned_function_name = intern_result.interned;
   char *format_string = "fn %s() {\n"
                         "\n"
                         "}";
@@ -198,13 +202,72 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   smith_cursor_t cursor = {.source = source};
   smith_next_token_result_t actual =
       smith_next_token(interner, cursor, keywords);
-  char *remaining_source = source + 2;
+  size_t end_column = 2;
+  char *remaining_source = source + end_column;
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_KEYWORD,
                 .value.keyword = {.kind = SMITH_KEYWORD_KIND_FN,
-                                  .span.end.column = 2}},
-      .cursor = {.source = remaining_source, .position.column = 2}};
+                                  .span.end.column = end_column}},
+      .cursor = {.source = remaining_source, .position.column = end_column}};
   smith_assert_next_token_result_equal(actual, expected);
+
+  size_t start_column = end_column + 1;
+  end_column += 1 + function_name.length;
+  remaining_source = source + end_column;
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
+                .value.symbol = {.interned = interned_function_name,
+                                 .span = {.start.column = start_column,
+                                          .end.column = end_column}}},
+      .cursor = {.source = remaining_source, .position.column = end_column}};
+  smith_assert_next_token_result_equal(actual, expected);
+
+  start_column = end_column;
+  end_column += 1;
+  remaining_source = source + end_column;
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
+                .value.delimiter = {.kind = SMITH_DELIMITER_KIND_OPEN_PAREN,
+                                    .span = {.start.column = start_column,
+                                             .end.column = end_column}}},
+      .cursor = {.source = remaining_source, .position.column = end_column}};
+  smith_assert_next_token_result_equal(actual, expected);
+
+  start_column = end_column;
+  end_column += 1;
+  remaining_source = source + end_column;
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
+                .value.delimiter = {.kind = SMITH_DELIMITER_KIND_CLOSE_PAREN,
+                                    .span = {.start.column = start_column,
+                                             .end.column = end_column}}},
+      .cursor = {.source = remaining_source, .position.column = end_column}};
+  smith_assert_next_token_result_equal(actual, expected);
+
+  start_column = end_column + 1;
+  end_column += 2;
+  remaining_source = source + end_column;
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
+                .value.delimiter = {.kind = SMITH_DELIMITER_KIND_OPEN_BRACE,
+                                    .span = {.start.column = start_column,
+                                             .end.column = end_column}}},
+      .cursor = {.source = remaining_source, .position.column = end_column}};
+  smith_assert_next_token_result_equal(actual, expected);
+
+  actual = smith_next_token(interner, actual.cursor, keywords);
+  expected = (smith_next_token_result_t){
+      .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
+                .value.delimiter = {.kind = SMITH_DELIMITER_KIND_CLOSE_BRACE,
+                                    .span = {.start.line = 2,
+                                             .end = {.line = 2, .column = 1}}}},
+      .cursor = {.source = "", .position = {.line = 2, .column = 1}}};
+  smith_assert_next_token_result_equal(actual, expected);
+
   smith_interner_destroy(interner);
   smith_allocator_destroy(allocator);
   return MUNIT_OK;
