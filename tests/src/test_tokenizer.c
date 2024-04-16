@@ -65,12 +65,12 @@ static MunitResult test_smith_tokenize_int(const MunitParameter params[],
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = interner_create(allocator);
   smith_keywords_t keywords = keywords_create(interner);
-  smith_string_t symbol = smith_random_int(allocator);
-  smith_interned_t interned = intern(interner, symbol);
-  smith_cursor_t cursor = {.source = symbol.data};
+  smith_string_t int_ = smith_random_int(allocator);
+  smith_interned_t interned = intern(interner, int_);
+  smith_cursor_t cursor = {.source = int_.data};
   smith_next_token_result_t actual =
       smith_next_token(interner, cursor, keywords);
-  smith_position_t end = {.column = symbol.length};
+  smith_position_t end = {.column = int_.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_INT,
                 .value.int_ = {.interned = interned, .span.end = end}},

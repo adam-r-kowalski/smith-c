@@ -13,6 +13,11 @@ smith_parse_result_t smith_parse_expression(smith_allocator_t allocator,
         .expression = {.kind = SMITH_EXPRESSION_KIND_SYMBOL,
                        .value.symbol = next_token_result.token.value.symbol},
         .cursor = next_token_result.cursor};
+  case SMITH_TOKEN_KIND_INT:
+    return (smith_parse_result_t){
+        .expression = {.kind = SMITH_EXPRESSION_KIND_INT,
+                       .value.int_ = next_token_result.token.value.int_},
+        .cursor = next_token_result.cursor};
   default:
     assert(false);
   }

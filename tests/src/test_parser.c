@@ -47,9 +47,34 @@ static MunitResult test_smith_parse_symbol(const MunitParameter params[],
   return MUNIT_OK;
 }
 
+static MunitResult test_smith_parse_int(const MunitParameter params[],
+                                        void *user_data_or_fixture) {
+  smith_allocator_t allocator = smith_system_allocator_create();
+  smith_interner_t interner = interner_create(allocator);
+  smith_keywords_t keywords = keywords_create(interner);
+  smith_string_t int_ = smith_random_int(allocator);
+  smith_interned_t interned = intern(interner, int_);
+  smith_cursor_t cursor = {.source = int_.data};
+  smith_parse_result_t actual =
+      smith_parse_expression(allocator, interner, cursor, keywords);
+  smith_position_t end = {.column = int_.length};
+  smith_parse_result_t expected = {
+      .expression = {.kind = SMITH_EXPRESSION_KIND_INT,
+                     .value.int_ = {.interned = interned, .span.end = end}},
+      .cursor = {.source = "", .position = end}};
+  smith_assert_parse_result_equal(actual, expected);
+  smith_interner_destroy(interner);
+  smith_allocator_destroy(allocator);
+  return MUNIT_OK;
+}
+
 static MunitTest smith_parser_tests[] = {{
                                              .name = "/test_smith_parse_symbol",
                                              .test = test_smith_parse_symbol,
+                                         },
+                                         {
+                                             .name = "/test_smith_parse_int",
+                                             .test = test_smith_parse_int,
                                          },
                                          {}};
 

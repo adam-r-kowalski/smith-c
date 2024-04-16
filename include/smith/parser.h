@@ -5,10 +5,12 @@
 
 typedef enum {
   SMITH_EXPRESSION_KIND_SYMBOL,
+  SMITH_EXPRESSION_KIND_INT,
 } smith_expression_kind_t;
 
 typedef union {
   smith_symbol_t symbol;
+  smith_int_t int_;
 } smith_expression_value_t;
 
 typedef struct {
