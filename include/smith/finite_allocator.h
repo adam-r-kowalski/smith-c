@@ -2,5 +2,10 @@
 
 #include "smith/allocator.h"
 
-smith_allocator_t smith_finite_allocator_create(smith_allocator_t parent,
-                                                size_t allocations);
+typedef struct {
+  smith_allocator_t allocator;
+  bool success;
+} smith_finite_allocator_create_result_t;
+
+smith_finite_allocator_create_result_t
+smith_finite_allocator_create(smith_allocator_t parent, size_t allocations);

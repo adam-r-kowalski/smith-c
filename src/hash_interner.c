@@ -110,13 +110,18 @@ static void destroy(void *interner) {
   smith_allocator_deallocate(allocator, hash_interner->occupied);
 }
 
-smith_interner_t smith_hash_interner_create(smith_allocator_t allocator) {
+smith_hash_interner_create_result_t
+smith_hash_interner_create(smith_allocator_t allocator) {
   smith_hash_interner_t *hash_interner =
       smith_allocator_allocate(allocator, smith_hash_interner_t);
-  assert(hash_interner != nullptr);
+  if (hash_interner == nullptr) {
+    return (smith_hash_interner_create_result_t){};
+  }
   *hash_interner = (smith_hash_interner_t){.allocator = allocator};
-  return (smith_interner_t){.intern = intern,
-                            .lookup = lookup,
-                            .destroy = destroy,
-                            .state = hash_interner};
+  return (smith_hash_interner_create_result_t){
+      .interner = {.intern = intern,
+                   .lookup = lookup,
+                   .destroy = destroy,
+                   .state = hash_interner},
+      .success = true};
 }

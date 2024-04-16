@@ -2,7 +2,6 @@
 
 #include "smith/tokenizer.h"
 #include "smith/interner.h"
-#include <assert.h>
 
 typedef struct {
   smith_string_t string;
