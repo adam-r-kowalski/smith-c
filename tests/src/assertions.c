@@ -75,7 +75,7 @@ void smith_assert_error_equal(smith_error_t actual, smith_error_t expected) {
   case SMITH_ERROR_KIND_UNEXPECTED_CHARACTER:
     return smith_assert_unexpected_character_equal(
         actual.value.unexpected_character, expected.value.unexpected_character);
-  case SMITH_ERROR_KIND_INTERING_FAILED:
+  case SMITH_ERROR_KIND_INTERNING_FAILED:
     return smith_assert_interning_failed_equal(actual.value.interning_failed,
                                                expected.value.interning_failed);
   }

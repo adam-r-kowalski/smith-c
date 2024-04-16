@@ -1,6 +1,7 @@
 #define SMITH_ENABLE_ALLOCATOR_MACROS
 
 #include "smith/assertions.h"
+#include "smith/finite_allocator.h"
 #include "smith/format.h"
 #include "smith/hash_interner.h"
 #include "smith/random.h"
@@ -210,6 +211,36 @@ test_smith_tokenize_invalid_token(const MunitParameter params[],
   return MUNIT_OK;
 }
 
+static MunitResult
+test_smith_tokenize_interning_fails(const MunitParameter params[],
+                                    void *user_data_or_fixture) {
+  smith_allocator_t system_allocator = smith_system_allocator_create();
+  smith_allocator_t finite_allocator =
+      smith_finite_allocator_create(system_allocator, 1);
+  smith_interner_t interner = smith_hash_interner_create(finite_allocator);
+  smith_keywords_t keywords = {0};
+  smith_string_t (*random_string[2])(smith_allocator_t) = {smith_random_symbol,
+                                                           smith_random_int};
+  for (size_t i = 0; i < 2; i++) {
+    smith_string_t string = random_string[i](system_allocator);
+    smith_cursor_t cursor = {.source = string.data};
+    smith_next_token_result_t actual =
+        smith_next_token(interner, cursor, keywords);
+    smith_next_token_result_t expected = {
+        .token = {.kind = SMITH_TOKEN_KIND_ERROR,
+                  .value.error = {.kind = SMITH_ERROR_KIND_INTERNING_FAILED,
+                                  .value.interning_failed =
+                                      {.string = string,
+                                       .span.end.column = string.length}}},
+        .cursor = {.source = "", .position.column = string.length}};
+    smith_assert_next_token_result_equal(actual, expected);
+    smith_allocator_deallocate(system_allocator, string.data);
+  }
+  smith_interner_destroy(interner);
+  smith_allocator_destroy(finite_allocator);
+  return MUNIT_OK;
+}
+
 static MunitResult test_smith_tokenize_function(const MunitParameter params[],
                                                 void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
@@ -337,6 +368,10 @@ static MunitTest smith_tokenizer_tests[] = {
     {
         .name = "/test_smith_tokenize_invalid_token",
         .test = test_smith_tokenize_invalid_token,
+    },
+    {
+        .name = "/test_smith_tokenize_interning_fails",
+        .test = test_smith_tokenize_interning_fails,
     },
     {
         .name = "/test_smith_tokenize_function",

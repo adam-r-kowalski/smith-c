@@ -86,7 +86,7 @@ typedef struct {
 
 typedef enum {
   SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
-  SMITH_ERROR_KIND_INTERING_FAILED,
+  SMITH_ERROR_KIND_INTERNING_FAILED,
 } smith_error_kind_t;
 
 typedef union {

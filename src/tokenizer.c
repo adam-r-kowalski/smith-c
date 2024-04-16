@@ -79,7 +79,7 @@ static smith_next_token_result_t tokenize_symbol(smith_interner_t intener,
   return (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_ERROR,
                 .value.error =
-                    {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
+                    {.kind = SMITH_ERROR_KIND_INTERNING_FAILED,
                      .value = {.interning_failed =
                                    {.string = take_while_result.string,
                                     .span = {.start = cursor.position,
@@ -113,7 +113,7 @@ static smith_next_token_result_t tokenize_number(smith_interner_t intener,
     return (smith_next_token_result_t){
         .token =
             {.kind = SMITH_TOKEN_KIND_ERROR,
-             .value = {.error = {.kind = SMITH_ERROR_KIND_INTERING_FAILED,
+             .value = {.error = {.kind = SMITH_ERROR_KIND_INTERNING_FAILED,
                                  .value = {.interning_failed =
             {.string = take_while_result.string, .span = {.start = cursor.position,
                                                          .end = take_while_result.cursor.position}}}}}},

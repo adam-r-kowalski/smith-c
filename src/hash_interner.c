@@ -30,15 +30,23 @@ static bool grow_if_needed(smith_hash_interner_t *interner) {
   size_t new_capacity =
       max(interner->capacity * SMITH_HASH_INTERNER_GROWTH_FACTOR,
           SMITH_HASH_INTERNER_MIN_CAPACITY);
-  interner->capacity = new_capacity;
   smith_allocator_t allocator = interner->allocator;
   smith_string_t *strings =
       smith_allocator_allocate_array(allocator, smith_string_t, new_capacity);
+  if (strings == nullptr) {
+    return false;
+  }
   uint64_t *hashes =
       smith_allocator_allocate_array(allocator, uint64_t, new_capacity);
+  if (hashes == nullptr) {
+    smith_allocator_deallocate(allocator, strings);
+    return false;
+  }
   bool *occupied =
       smith_allocator_allocate_array(allocator, bool, new_capacity);
-  if (strings == nullptr || hashes == nullptr || occupied == nullptr) {
+  if (occupied == nullptr) {
+    smith_allocator_deallocate(allocator, strings);
+    smith_allocator_deallocate(allocator, hashes);
     return false;
   }
   memcpy(strings, interner->strings, interner->count * sizeof(smith_string_t));
@@ -50,6 +58,7 @@ static bool grow_if_needed(smith_hash_interner_t *interner) {
   interner->strings = strings;
   interner->hashes = hashes;
   interner->occupied = occupied;
+  interner->capacity = new_capacity;
   return true;
 }
 
@@ -104,6 +113,7 @@ static void destroy(void *interner) {
 smith_interner_t smith_hash_interner_create(smith_allocator_t allocator) {
   smith_hash_interner_t *hash_interner =
       smith_allocator_allocate(allocator, smith_hash_interner_t);
+  assert(hash_interner != nullptr);
   *hash_interner = (smith_hash_interner_t){.allocator = allocator};
   return (smith_interner_t){.intern = intern,
                             .lookup = lookup,
