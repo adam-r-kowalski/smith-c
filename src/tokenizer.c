@@ -185,13 +185,17 @@ tokenize_unexpected_character(smith_cursor_t cursor, char c) {
   };
 }
 
-smith_keywords_t smith_keywords_create(smith_interner_t interner) {
+smith_keywords_create_result_t
+smith_keywords_create(smith_interner_t interner) {
   smith_keywords_t keywords;
   smith_intern_result_t intern_result = smith_interner_intern(
       interner, (smith_string_t){.data = "fn", .length = 2});
-  assert(intern_result.success);
+  if (!intern_result.success) {
+    return (smith_keywords_create_result_t){};
+  }
   keywords.fn = intern_result.interned;
-  return keywords;
+  return (smith_keywords_create_result_t){.keywords = keywords,
+                                          .success = true};
 }
 
 smith_cursor_t trim_whitespace(smith_cursor_t cursor) {

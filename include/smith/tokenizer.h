@@ -135,7 +135,12 @@ typedef struct {
   smith_cursor_t cursor;
 } smith_next_token_result_t;
 
-smith_keywords_t smith_keywords_create(smith_interner_t interner);
+typedef struct {
+  smith_keywords_t keywords;
+  bool success;
+} smith_keywords_create_result_t;
+
+smith_keywords_create_result_t smith_keywords_create(smith_interner_t interner);
 
 smith_next_token_result_t smith_next_token(smith_interner_t interner,
                                            smith_cursor_t cursor,

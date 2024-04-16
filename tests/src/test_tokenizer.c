@@ -14,13 +14,15 @@ static MunitResult test_smith_tokenize_symbol(const MunitParameter params[],
                                               void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t symbol = smith_random_symbol(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
@@ -37,13 +39,15 @@ static MunitResult test_smith_tokenize_int(const MunitParameter params[],
                                            void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t symbol = smith_random_int(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_INT,
@@ -60,13 +64,15 @@ static MunitResult test_smith_tokenize_float(const MunitParameter params[],
                                              void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t symbol = smith_random_float(allocator);
   smith_intern_result_t intern_result = smith_interner_intern(interner, symbol);
   munit_assert(intern_result.success);
   smith_cursor_t cursor = {.source = symbol.data};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   smith_position_t end = {.column = symbol.length};
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_FLOAT,
@@ -83,7 +89,9 @@ static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
                                                 void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t operators[] = {
       {"+", 1},  {"+=", 2}, {"-", 1},  {"-=", 2}, {"*", 1},
       {"*=", 2}, {"/", 1},  {"/=", 2}, {"=", 1},  {"==", 2},
@@ -105,7 +113,7 @@ static MunitResult test_smith_tokenize_operator(const MunitParameter params[],
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
     smith_next_token_result_t actual =
-        smith_next_token(interner, cursor, keywords);
+        smith_next_token(interner, cursor, create_keywords_result.keywords);
     smith_position_t end = {.column = operators[i].length};
     smith_next_token_result_t expected = {
         .token = {.kind = SMITH_TOKEN_KIND_OPERATOR,
@@ -122,7 +130,9 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
                                                  void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t operators[] = {{"(", 1}, {")", 1}, {"{", 1}, {"}", 1},
                                 {"[", 1}, {"]", 1}, {",", 1}};
   smith_delimiter_kind_t kinds[] = {
@@ -134,7 +144,7 @@ static MunitResult test_smith_tokenize_delimiter(const MunitParameter params[],
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_cursor_t cursor = {.source = operators[i].data};
     smith_next_token_result_t actual =
-        smith_next_token(interner, cursor, keywords);
+        smith_next_token(interner, cursor, create_keywords_result.keywords);
     smith_position_t end = {.column = operators[i].length};
     smith_next_token_result_t expected = {
         .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
@@ -151,7 +161,9 @@ static MunitResult test_smith_tokenize_keyword(const MunitParameter params[],
                                                void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t keyword_strings[] = {{"fn", 2}};
   smith_keyword_kind_t kinds[] = {
       SMITH_KEYWORD_KIND_FN,
@@ -160,7 +172,7 @@ static MunitResult test_smith_tokenize_keyword(const MunitParameter params[],
        i++) {
     smith_cursor_t cursor = {.source = keyword_strings[i].data};
     smith_next_token_result_t actual =
-        smith_next_token(interner, cursor, keywords);
+        smith_next_token(interner, cursor, create_keywords_result.keywords);
     smith_position_t end = {.column = keyword_strings[i].length};
     smith_next_token_result_t expected = {
         .token = {.kind = SMITH_TOKEN_KIND_KEYWORD,
@@ -178,10 +190,12 @@ test_smith_tokenize_empty_string(const MunitParameter params[],
                                  void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_cursor_t cursor = {.source = ""};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   smith_next_token_result_t expected = {
       .token.kind = SMITH_TOKEN_KIND_END_OF_FILE, .cursor.source = ""};
   smith_assert_next_token_result_equal(actual, expected);
@@ -195,10 +209,12 @@ test_smith_tokenize_invalid_token(const MunitParameter params[],
                                   void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_cursor_t cursor = {.source = ";"};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   smith_next_token_result_t expected = {
       .token = {.kind = SMITH_TOKEN_KIND_ERROR,
                 .value.error = {.kind = SMITH_ERROR_KIND_UNEXPECTED_CHARACTER,
@@ -245,7 +261,9 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
                                                 void *user_data_or_fixture) {
   smith_allocator_t allocator = smith_system_allocator_create();
   smith_interner_t interner = smith_hash_interner_create(allocator);
-  smith_keywords_t keywords = smith_keywords_create(interner);
+  smith_keywords_create_result_t create_keywords_result =
+      smith_keywords_create(interner);
+  munit_assert(create_keywords_result.success);
   smith_string_t function_name = smith_random_symbol(allocator);
   smith_intern_result_t intern_result =
       smith_interner_intern(interner, function_name);
@@ -258,7 +276,7 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
       smith_format_string(allocator, format_string, function_name.data);
   smith_cursor_t cursor = {.source = source};
   smith_next_token_result_t actual =
-      smith_next_token(interner, cursor, keywords);
+      smith_next_token(interner, cursor, create_keywords_result.keywords);
   size_t end_column = 2;
   char *remaining_source = source + end_column;
   smith_next_token_result_t expected = {
@@ -271,7 +289,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   size_t start_column = end_column + 1;
   end_column += 1 + function_name.length;
   remaining_source = source + end_column;
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_SYMBOL,
                 .value.symbol = {.interned = interned_function_name,
@@ -283,7 +302,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   start_column = end_column;
   end_column += 1;
   remaining_source = source + end_column;
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
                 .value.delimiter = {.kind = SMITH_DELIMITER_KIND_OPEN_PAREN,
@@ -295,7 +315,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   start_column = end_column;
   end_column += 1;
   remaining_source = source + end_column;
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
                 .value.delimiter = {.kind = SMITH_DELIMITER_KIND_CLOSE_PAREN,
@@ -307,7 +328,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
   start_column = end_column + 1;
   end_column += 2;
   remaining_source = source + end_column;
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
                 .value.delimiter = {.kind = SMITH_DELIMITER_KIND_OPEN_BRACE,
@@ -316,7 +338,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
       .cursor = {.source = remaining_source, .position.column = end_column}};
   smith_assert_next_token_result_equal(actual, expected);
 
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_DELIMITER,
                 .value.delimiter = {.kind = SMITH_DELIMITER_KIND_CLOSE_BRACE,
@@ -325,7 +348,8 @@ static MunitResult test_smith_tokenize_function(const MunitParameter params[],
       .cursor = {.source = "", .position = {.line = 2, .column = 1}}};
   smith_assert_next_token_result_equal(actual, expected);
 
-  actual = smith_next_token(interner, actual.cursor, keywords);
+  actual = smith_next_token(interner, actual.cursor,
+                            create_keywords_result.keywords);
   expected = (smith_next_token_result_t){
       .token = {.kind = SMITH_TOKEN_KIND_END_OF_FILE,
                 .value.end_of_file.span.start = {.line = 2, .column = 1}},
