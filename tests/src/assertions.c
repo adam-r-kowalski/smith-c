@@ -113,3 +113,19 @@ void smith_assert_next_token_result_equal(smith_next_token_result_t actual,
   smith_assert_token_equal(actual.token, expected.token);
   smith_assert_cursor_equal(actual.cursor, expected.cursor);
 }
+
+void smith_assert_expression_equal(smith_expression_t actual,
+                                   smith_expression_t expected) {
+  munit_assert_int(actual.kind, ==, expected.kind);
+  switch (actual.kind) {
+  case SMITH_EXPRESSION_KIND_SYMBOL:
+    return smith_assert_symbol_equal(actual.value.symbol,
+                                     expected.value.symbol);
+  }
+}
+
+void smith_assert_parse_result_equal(smith_parse_result_t actual,
+                                     smith_parse_result_t expected) {
+  smith_assert_expression_equal(actual.expression, expected.expression);
+  smith_assert_cursor_equal(actual.cursor, expected.cursor);
+}

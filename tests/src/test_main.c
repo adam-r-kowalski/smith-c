@@ -2,7 +2,8 @@
 #include <munit.h>
 
 int32_t main(int argc, char *argv[]) {
-  MunitSuite suites[] = {smith_tokenizer_suite, smith_hash_interner_suite, {}};
+  MunitSuite suites[] = {
+      smith_tokenizer_suite, smith_parser_suite, smith_hash_interner_suite, {}};
 
   MunitSuite main_suite = {.prefix = "All Tests",
                            .suites = suites,
