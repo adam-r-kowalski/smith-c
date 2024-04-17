@@ -114,9 +114,18 @@ void smith_assert_next_token_result_equal(smith_next_token_result_t actual,
   smith_assert_cursor_equal(actual.cursor, expected.cursor);
 }
 
+void smith_assert_binary_operator_info_equal(
+    smith_binary_operator_info_t actual,
+    smith_binary_operator_info_t expected) {
+  munit_assert_int(actual.kind, ==, expected.kind);
+  smith_assert_span_equal(actual.span, expected.span);
+  munit_assert_int(actual.precedence, ==, expected.precedence);
+  munit_assert_int(actual.associativity, ==, expected.associativity);
+}
+
 void smith_assert_binary_operator_equal(smith_binary_operator_t actual,
                                         smith_binary_operator_t expected) {
-  munit_assert_int(actual.kind, ==, expected.kind);
+  smith_assert_binary_operator_info_equal(actual.info, expected.info);
   munit_assert_not_null(actual.left);
   smith_assert_expression_equal(*actual.left, *expected.left);
   munit_assert_not_null(actual.right);

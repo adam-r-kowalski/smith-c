@@ -7,10 +7,28 @@ typedef struct smith_expression_t smith_expression_t;
 
 typedef enum {
   SMITH_BINARY_OPERATOR_KIND_ADD,
+  SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
 } smith_binary_operator_kind_t;
+
+typedef enum {
+  SMITH_PRECEDENCE_LOWEST,
+  SMITH_PRECEDENCE_ADD,
+} smith_precedence_t;
+
+typedef enum {
+  SMITH_ASSOCIATIVITY_LEFT,
+  SMITH_ASSOCIATIVITY_RIGHT,
+} smith_associativity_t;
 
 typedef struct {
   smith_binary_operator_kind_t kind;
+  smith_span_t span;
+  smith_precedence_t precedence;
+  smith_associativity_t associativity;
+} smith_binary_operator_info_t;
+
+typedef struct {
+  smith_binary_operator_info_t info;
   smith_expression_t *left;
   smith_expression_t *right;
 } smith_binary_operator_t;

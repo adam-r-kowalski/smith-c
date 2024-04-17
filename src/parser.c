@@ -67,7 +67,7 @@ static infix_parser_t infix_parser_for(smith_token_t token) {
 
 static smith_parse_result_t smith_parse_binary_operator(
     smith_parser_context_t context, smith_cursor_t cursor,
-    smith_binary_operator_kind_t kind, smith_expression_t left) {
+    smith_binary_operator_info_t info, smith_expression_t left) {
   smith_expression_t *left_ =
       smith_allocator_allocate(context.allocator, smith_expression_t);
   // TODO: Handle allocation failure.
@@ -82,7 +82,7 @@ static smith_parse_result_t smith_parse_binary_operator(
   *right = right_parse_result.expression;
   return (smith_parse_result_t){
       .expression = {.kind = SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
-                     .value.binary_operator = {.kind = kind,
+                     .value.binary_operator = {.info = info,
                                                .left = left_,
                                                .right = right}},
       .cursor = right_parse_result.cursor};
@@ -96,10 +96,16 @@ smith_parse_result_t smith_parse_expression(smith_parser_context_t context,
       next_token(context, prefix_parse_result.cursor);
   infix_parser_t infix_parser = infix_parser_for(next_token_result.token);
   switch (infix_parser.kind) {
-  case INFIX_PARSER_KIND_BINARY_OPERATOR:
-    return smith_parse_binary_operator(context, next_token_result.cursor,
-                                       infix_parser.value.binary_operator_kind,
+  case INFIX_PARSER_KIND_BINARY_OPERATOR: {
+    smith_binary_operator_info_t info = {
+        .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
+        .span = next_token_result.token.value.operator_.span,
+        .precedence = SMITH_PRECEDENCE_ADD,
+        .associativity = SMITH_ASSOCIATIVITY_LEFT,
+    };
+    return smith_parse_binary_operator(context, next_token_result.cursor, info,
                                        prefix_parse_result.expression);
+  }
   case INFIX_PARSER_KIND_NONE:
     return prefix_parse_result;
   }
