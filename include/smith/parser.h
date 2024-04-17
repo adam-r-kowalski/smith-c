@@ -3,29 +3,50 @@
 #include "smith/allocator.h"
 #include "smith/tokenizer.h"
 
+typedef struct smith_expression_t smith_expression_t;
+
+typedef enum {
+  SMITH_BINARY_OPERATOR_KIND_ADD,
+} smith_binary_operator_kind_t;
+
+typedef struct {
+  smith_binary_operator_kind_t kind;
+  smith_expression_t *left;
+  smith_expression_t *right;
+} smith_binary_operator_t;
+
 typedef enum {
   SMITH_EXPRESSION_KIND_SYMBOL,
   SMITH_EXPRESSION_KIND_INT,
   SMITH_EXPRESSION_KIND_FLOAT,
+  SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
 } smith_expression_kind_t;
 
 typedef union {
   smith_symbol_t symbol;
   smith_int_t int_;
   smith_float_t float_;
+  smith_binary_operator_t binary_operator;
 } smith_expression_value_t;
 
-typedef struct {
+struct smith_expression_t {
   smith_expression_kind_t kind;
   smith_expression_value_t value;
-} smith_expression_t;
+};
 
 typedef struct {
   smith_expression_t expression;
   smith_cursor_t cursor;
 } smith_parse_result_t;
 
-smith_parse_result_t smith_parse_expression(smith_allocator_t allocator,
-                                            smith_interner_t interner,
-                                            smith_cursor_t cursor,
-                                            smith_keywords_t keywords);
+typedef struct {
+  smith_allocator_t allocator;
+  smith_interner_t interner;
+  smith_keywords_t keywords;
+} smith_parser_context_t;
+
+smith_parse_result_t smith_parse_expression(smith_parser_context_t context,
+                                            smith_cursor_t cursor);
+
+void smith_expression_destroy(smith_allocator_t allocator,
+                              smith_expression_t expression);

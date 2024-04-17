@@ -114,6 +114,15 @@ void smith_assert_next_token_result_equal(smith_next_token_result_t actual,
   smith_assert_cursor_equal(actual.cursor, expected.cursor);
 }
 
+void smith_assert_binary_operator_equal(smith_binary_operator_t actual,
+                                        smith_binary_operator_t expected) {
+  munit_assert_int(actual.kind, ==, expected.kind);
+  munit_assert_not_null(actual.left);
+  smith_assert_expression_equal(*actual.left, *expected.left);
+  munit_assert_not_null(actual.right);
+  smith_assert_expression_equal(*actual.right, *expected.right);
+}
+
 void smith_assert_expression_equal(smith_expression_t actual,
                                    smith_expression_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
@@ -121,6 +130,13 @@ void smith_assert_expression_equal(smith_expression_t actual,
   case SMITH_EXPRESSION_KIND_SYMBOL:
     return smith_assert_symbol_equal(actual.value.symbol,
                                      expected.value.symbol);
+  case SMITH_EXPRESSION_KIND_INT:
+    return smith_assert_int_equal(actual.value.int_, expected.value.int_);
+  case SMITH_EXPRESSION_KIND_FLOAT:
+    return smith_assert_float_equal(actual.value.float_, expected.value.float_);
+  case SMITH_EXPRESSION_KIND_BINARY_OPERATOR:
+    return smith_assert_binary_operator_equal(actual.value.binary_operator,
+                                              expected.value.binary_operator);
   }
 }
 
