@@ -100,44 +100,67 @@ test_smith_parse_binary_operator(const MunitParameter params[],
   smith_parser_context_t context = parser_context_create();
   smith_string_t lhs = smith_random_symbol(context.allocator);
   smith_string_t rhs = smith_random_symbol(context.allocator);
-  char *source =
-      smith_format_string(context.allocator, "%s + %s", lhs.data, rhs.data);
-  munit_assert_not_null(source);
-  smith_cursor_t cursor = {.source = source};
-  smith_parse_result_t actual = smith_parse_expression(context, cursor);
   smith_interned_t lhs_interned = intern(context.interner, lhs);
   smith_interned_t rhs_interned = intern(context.interner, rhs);
-  smith_position_t lhs_end = {.column = lhs.length};
-  smith_position_t rhs_start = {.column = lhs.length + 3};
-  smith_span_t rhs_span = {.start = rhs_start,
-                           .end.column = rhs_start.column + rhs.length};
-  smith_parse_result_t expected = {
-      .expression =
-          {.kind = SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
-           .value.binary_operator =
-               {.info =
-                    {
-                        .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
-                        .span = {.start.column = lhs_end.column + 1,
-                                 .end.column = rhs_start.column - 1},
-                        .precedence = SMITH_PRECEDENCE_ADD,
-                        .associativity = SMITH_ASSOCIATIVITY_LEFT,
-                    },
-                .left =
-                    &(smith_expression_t){
-                        .kind = SMITH_EXPRESSION_KIND_SYMBOL,
-                        .value.symbol = {.interned = lhs_interned,
-                                         .span.end = lhs_end}},
-                .right =
-                    &(smith_expression_t){
-                        .kind = SMITH_EXPRESSION_KIND_SYMBOL,
-                        .value.symbol =
-                            {.interned = rhs_interned, .span = rhs_span}}}},
-      .cursor = {.source = "", .position = rhs_span.end},
+  smith_span_t lhs_span = {.end.column = lhs.length};
+  char *operators[] = {
+      "+",
+      "+=",
   };
-  smith_assert_parse_result_equal(actual, expected);
-  smith_expression_destroy(context.allocator, actual.expression);
-  smith_allocator_deallocate(context.allocator, source);
+  smith_binary_operator_kind_t kinds[] = {
+      SMITH_BINARY_OPERATOR_KIND_ADD,
+      SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
+  };
+  smith_precedence_t precedences[] = {
+      SMITH_PRECEDENCE_ADD,
+      SMITH_PRECEDENCE_ASSIGN,
+  };
+  smith_associativity_t associativities[] = {
+      SMITH_ASSOCIATIVITY_LEFT,
+      SMITH_ASSOCIATIVITY_RIGHT,
+  };
+  for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
+    smith_span_t op_span = {.start.column = lhs_span.end.column + 1,
+                            .end.column =
+                                lhs_span.end.column + 1 + strlen(operators[i])};
+    smith_span_t rhs_span = {.start.column = op_span.end.column + 1,
+                             .end.column = op_span.end.column + 1 + rhs.length};
+    char *source = smith_format_string(context.allocator, "%s %s %s", lhs.data,
+                                       operators[i], rhs.data);
+    munit_assert_not_null(source);
+    smith_cursor_t cursor = {.source = source};
+    smith_parse_result_t actual = smith_parse_expression(context, cursor);
+    smith_parse_result_t expected = {
+        .expression =
+            {
+                .kind = SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
+                .value.binary_operator =
+                    {
+                        .info =
+                            {
+                                .kind = kinds[i],
+                                .span = op_span,
+                                .precedence = precedences[i],
+                                .associativity = associativities[i],
+                            },
+                        .left =
+                            &(smith_expression_t){
+                                .kind = SMITH_EXPRESSION_KIND_SYMBOL,
+                                .value.symbol = {.interned = lhs_interned,
+                                                 .span.end = lhs_span.end}},
+                        .right =
+                            &(smith_expression_t){
+                                .kind = SMITH_EXPRESSION_KIND_SYMBOL,
+                                .value.symbol = {.interned = rhs_interned,
+                                                 .span = rhs_span}},
+                    },
+            },
+        .cursor = {.source = "", .position = rhs_span.end},
+    };
+    smith_assert_parse_result_equal(actual, expected);
+    smith_expression_destroy(context.allocator, actual.expression);
+    smith_allocator_deallocate(context.allocator, source);
+  }
   smith_allocator_deallocate(context.allocator, lhs.data);
   smith_allocator_deallocate(context.allocator, rhs.data);
   parser_context_destroy(context);

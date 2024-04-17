@@ -38,7 +38,7 @@ typedef enum {
 } infix_parser_kind_t;
 
 typedef union {
-  smith_binary_operator_kind_t binary_operator_kind;
+  smith_binary_operator_info_t binary_operator_info;
   void *none;
 } infix_parser_value_t;
 
@@ -54,7 +54,19 @@ static infix_parser_t infix_parser_for(smith_token_t token) {
     case SMITH_OPERATOR_KIND_ADD:
       return (infix_parser_t){
           .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
-          .value = {.binary_operator_kind = SMITH_BINARY_OPERATOR_KIND_ADD}};
+          .value = {.binary_operator_info = {
+                        .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
+                        .span = token.value.operator_.span,
+                        .precedence = SMITH_PRECEDENCE_ADD,
+                        .associativity = SMITH_ASSOCIATIVITY_LEFT}}};
+    case SMITH_OPERATOR_KIND_ADD_ASSIGN:
+      return (infix_parser_t){
+          .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
+          .value = {.binary_operator_info = {
+                        .kind = SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
+                        .span = token.value.operator_.span,
+                        .precedence = SMITH_PRECEDENCE_ASSIGN,
+                        .associativity = SMITH_ASSOCIATIVITY_RIGHT}}};
     default:
       break;
     }
@@ -97,13 +109,8 @@ smith_parse_result_t smith_parse_expression(smith_parser_context_t context,
   infix_parser_t infix_parser = infix_parser_for(next_token_result.token);
   switch (infix_parser.kind) {
   case INFIX_PARSER_KIND_BINARY_OPERATOR: {
-    smith_binary_operator_info_t info = {
-        .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
-        .span = next_token_result.token.value.operator_.span,
-        .precedence = SMITH_PRECEDENCE_ADD,
-        .associativity = SMITH_ASSOCIATIVITY_LEFT,
-    };
-    return smith_parse_binary_operator(context, next_token_result.cursor, info,
+    return smith_parse_binary_operator(context, next_token_result.cursor,
+                                       infix_parser.value.binary_operator_info,
                                        prefix_parse_result.expression);
   }
   case INFIX_PARSER_KIND_NONE:
