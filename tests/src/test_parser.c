@@ -125,6 +125,7 @@ test_smith_parse_binary_operator(const MunitParameter params[],
       .cursor = {.source = "", .position = b_span.end}};
   smith_assert_parse_result_equal(actual, expected);
   smith_expression_destroy(context.allocator, actual.expression);
+  smith_allocator_deallocate(context.allocator, source);
   parser_context_destroy(context);
   return MUNIT_OK;
 }
