@@ -49,32 +49,21 @@ typedef struct {
 
 static infix_parser_t infix_parser_for(smith_token_t token) {
   switch (token.kind) {
-  case SMITH_TOKEN_KIND_OPERATOR:
-    switch (token.value.operator_.kind) {
-    case SMITH_OPERATOR_KIND_ADD:
-      return (infix_parser_t){
-          .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
-          .value = {.binary_operator_info = {
-                        .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
-                        .span = token.value.operator_.span,
-                        .precedence = SMITH_PRECEDENCE_ADD,
-                        .associativity = SMITH_ASSOCIATIVITY_LEFT}}};
-    case SMITH_OPERATOR_KIND_ADD_ASSIGN:
-      return (infix_parser_t){
-          .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
-          .value = {.binary_operator_info = {
-                        .kind = SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
-                        .span = token.value.operator_.span,
-                        .precedence = SMITH_PRECEDENCE_ASSIGN,
-                        .associativity = SMITH_ASSOCIATIVITY_RIGHT}}};
-    default:
-      break;
-    }
-  default:
-    break;
+  case SMITH_TOKEN_KIND_OPERATOR: {
+    smith_operator_kind_t kind = token.value.operator_.kind;
+    return (infix_parser_t){
+        .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
+        .value = {
+            .binary_operator_info = {
+                .kind = smith_binary_operator_kinds[kind],
+                .span = token.value.operator_.span,
+                .precedence = smith_binary_operator_precedences[kind],
+                .associativity = smith_binary_operator_associativities[kind]}}};
   }
-  return (infix_parser_t){.kind = INFIX_PARSER_KIND_NONE,
-                          .value = {.none = nullptr}};
+  default:
+    return (infix_parser_t){.kind = INFIX_PARSER_KIND_NONE,
+                            .value = {.none = nullptr}};
+  }
 }
 
 static smith_parse_result_t smith_parse_binary_operator(

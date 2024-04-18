@@ -103,22 +103,8 @@ test_smith_parse_binary_operator(const MunitParameter params[],
   smith_interned_t lhs_interned = intern(context.interner, lhs);
   smith_interned_t rhs_interned = intern(context.interner, rhs);
   smith_span_t lhs_span = {.end.column = lhs.length};
-  char *operators[] = {
-      "+",
-      "+=",
-  };
-  smith_binary_operator_kind_t kinds[] = {
-      SMITH_BINARY_OPERATOR_KIND_ADD,
-      SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
-  };
-  smith_precedence_t precedences[] = {
-      SMITH_PRECEDENCE_ADD,
-      SMITH_PRECEDENCE_ASSIGN,
-  };
-  smith_associativity_t associativities[] = {
-      SMITH_ASSOCIATIVITY_LEFT,
-      SMITH_ASSOCIATIVITY_RIGHT,
-  };
+  char *operators[] = {"+", "+=", "-", "-=", "*", "*=", "/", "/=", "=", "==",
+                       "!", "!=", "<", "<=", ">", ">=", "&", "&&", "|", "||"};
   for (size_t i = 0; i < sizeof(operators) / sizeof(operators[0]); i++) {
     smith_span_t op_span = {.start.column = lhs_span.end.column + 1,
                             .end.column =
@@ -138,10 +124,12 @@ test_smith_parse_binary_operator(const MunitParameter params[],
                     {
                         .info =
                             {
-                                .kind = kinds[i],
+                                .kind = smith_binary_operator_kinds[i],
                                 .span = op_span,
-                                .precedence = precedences[i],
-                                .associativity = associativities[i],
+                                .precedence =
+                                    smith_binary_operator_precedences[i],
+                                .associativity =
+                                    smith_binary_operator_associativities[i],
                             },
                         .left =
                             &(smith_expression_t){
