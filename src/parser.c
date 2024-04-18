@@ -32,13 +32,18 @@ static smith_parse_result_t smith_parse_prefix(smith_parser_context_t context,
   }
 }
 
+typedef struct {
+  smith_operator_kind_t kind;
+  smith_span_t span;
+} smith_binary_operator_parser_t;
+
 typedef enum {
   INFIX_PARSER_KIND_BINARY_OPERATOR,
   INFIX_PARSER_KIND_NONE,
 } infix_parser_kind_t;
 
 typedef union {
-  smith_binary_operator_info_t binary_operator_info;
+  smith_binary_operator_parser_t binary_operator;
   void *none;
 } infix_parser_value_t;
 
@@ -51,24 +56,21 @@ static infix_parser_t infix_parser_for(smith_token_t token) {
   switch (token.kind) {
   case SMITH_TOKEN_KIND_OPERATOR: {
     smith_operator_kind_t kind = token.value.operator_.kind;
-    return (infix_parser_t){
-        .kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
-        .value = {
-            .binary_operator_info = {
-                .kind = smith_binary_operator_kinds[kind],
-                .span = token.value.operator_.span,
-                .precedence = smith_binary_operator_precedences[kind],
-                .associativity = smith_binary_operator_associativities[kind]}}};
-  }
+    return (infix_parser_t){.kind = INFIX_PARSER_KIND_BINARY_OPERATOR,
+                            .value = {.binary_operator = {
+                                          .kind = kind,
+                                          .span = token.value.operator_.span,
+                                      }}};
   default:
     return (infix_parser_t){.kind = INFIX_PARSER_KIND_NONE,
                             .value = {.none = nullptr}};
+  }
   }
 }
 
 static smith_parse_result_t smith_parse_binary_operator(
     smith_parser_context_t context, smith_cursor_t cursor,
-    smith_binary_operator_info_t info, smith_expression_t left) {
+    smith_binary_operator_parser_t op, smith_expression_t left) {
   smith_expression_t *left_ =
       smith_allocator_allocate(context.allocator, smith_expression_t);
   // TODO: Handle allocation failure.
@@ -83,9 +85,11 @@ static smith_parse_result_t smith_parse_binary_operator(
   *right = right_parse_result.expression;
   return (smith_parse_result_t){
       .expression = {.kind = SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
-                     .value.binary_operator = {.info = info,
-                                               .left = left_,
-                                               .right = right}},
+                     .value.binary_operator =
+                         {.info = smith_binary_operator_mapping[op.kind],
+                          .op_span = op.span,
+                          .left = left_,
+                          .right = right}},
       .cursor = right_parse_result.cursor};
 }
 
@@ -99,7 +103,7 @@ smith_parse_result_t smith_parse_expression(smith_parser_context_t context,
   switch (infix_parser.kind) {
   case INFIX_PARSER_KIND_BINARY_OPERATOR: {
     return smith_parse_binary_operator(context, next_token_result.cursor,
-                                       infix_parser.value.binary_operator_info,
+                                       infix_parser.value.binary_operator,
                                        prefix_parse_result.expression);
   }
   case INFIX_PARSER_KIND_NONE:
@@ -123,3 +127,126 @@ void smith_expression_destroy(smith_allocator_t allocator,
     break;
   }
 }
+
+smith_binary_operator_info_t smith_binary_operator_mapping[] = {
+    [SMITH_OPERATOR_KIND_ADD] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_ADD,
+            .precedence = SMITH_PRECEDENCE_ADD,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_ADD_ASSIGN] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_ADD_ASSIGN,
+            .precedence = SMITH_PRECEDENCE_ASSIGN,
+            .associativity = SMITH_ASSOCIATIVITY_RIGHT,
+        },
+    [SMITH_OPERATOR_KIND_SUB] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_SUB,
+            .precedence = SMITH_PRECEDENCE_ADD,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_SUB_ASSIGN] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_SUB_ASSIGN,
+            .precedence = SMITH_PRECEDENCE_ASSIGN,
+            .associativity = SMITH_ASSOCIATIVITY_RIGHT,
+        },
+    [SMITH_OPERATOR_KIND_MUL] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_MUL,
+            .precedence = SMITH_PRECEDENCE_MUL,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_MUL_ASSIGN] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_MUL_ASSIGN,
+            .precedence = SMITH_PRECEDENCE_ASSIGN,
+            .associativity = SMITH_ASSOCIATIVITY_RIGHT,
+        },
+    [SMITH_OPERATOR_KIND_DIV] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_DIV,
+            .precedence = SMITH_PRECEDENCE_MUL,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_DIV_ASSIGN] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_DIV_ASSIGN,
+            .precedence = SMITH_PRECEDENCE_ASSIGN,
+            .associativity = SMITH_ASSOCIATIVITY_RIGHT,
+        },
+    [SMITH_OPERATOR_KIND_ASSIGN] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_ASSIGN,
+            .precedence = SMITH_PRECEDENCE_ASSIGN,
+            .associativity = SMITH_ASSOCIATIVITY_RIGHT,
+        },
+    [SMITH_OPERATOR_KIND_EQ] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_EQ,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_NOT] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_NOT,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_NOT_EQ] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_NOT_EQ,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_LT] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_LT,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_LE] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_LE,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_GT] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_GT,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_GE] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_GE,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_BIT_AND] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_BIT_AND,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_AND] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_AND,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_BIT_OR] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_BIT_OR,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+    [SMITH_OPERATOR_KIND_OR] =
+        {
+            .kind = SMITH_BINARY_OPERATOR_KIND_OR,
+            .precedence = SMITH_PRECEDENCE_EQ,
+            .associativity = SMITH_ASSOCIATIVITY_LEFT,
+        },
+};

@@ -79,13 +79,13 @@ static MunitResult test_smith_parse_int(const MunitParameter params[],
 static MunitResult test_smith_parse_float(const MunitParameter params[],
                                           void *user_data_or_fixture) {
   smith_parser_context_t context = parser_context_create();
-  smith_string_t float_ = smith_random_int(context.allocator);
+  smith_string_t float_ = smith_random_float(context.allocator);
   smith_cursor_t cursor = {.source = float_.data};
   smith_parse_result_t actual = smith_parse_expression(context, cursor);
   smith_position_t end = {.column = float_.length};
   smith_interned_t interned = intern(context.interner, float_);
   smith_parse_result_t expected = {
-      .expression = {.kind = SMITH_EXPRESSION_KIND_INT,
+      .expression = {.kind = SMITH_EXPRESSION_KIND_FLOAT,
                      .value.float_ = {.interned = interned, .span.end = end}},
       .cursor = {.source = "", .position = end}};
   smith_assert_parse_result_equal(actual, expected);
@@ -122,15 +122,8 @@ test_smith_parse_binary_operator(const MunitParameter params[],
                 .kind = SMITH_EXPRESSION_KIND_BINARY_OPERATOR,
                 .value.binary_operator =
                     {
-                        .info =
-                            {
-                                .kind = smith_binary_operator_kinds[i],
-                                .span = op_span,
-                                .precedence =
-                                    smith_binary_operator_precedences[i],
-                                .associativity =
-                                    smith_binary_operator_associativities[i],
-                            },
+                        .info = smith_binary_operator_mapping[i],
+                        .op_span = op_span,
                         .left =
                             &(smith_expression_t){
                                 .kind = SMITH_EXPRESSION_KIND_SYMBOL,

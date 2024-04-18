@@ -118,7 +118,6 @@ void smith_assert_binary_operator_info_equal(
     smith_binary_operator_info_t actual,
     smith_binary_operator_info_t expected) {
   munit_assert_int(actual.kind, ==, expected.kind);
-  smith_assert_span_equal(actual.span, expected.span);
   munit_assert_int(actual.precedence, ==, expected.precedence);
   munit_assert_int(actual.associativity, ==, expected.associativity);
 }
@@ -126,6 +125,7 @@ void smith_assert_binary_operator_info_equal(
 void smith_assert_binary_operator_equal(smith_binary_operator_t actual,
                                         smith_binary_operator_t expected) {
   smith_assert_binary_operator_info_equal(actual.info, expected.info);
+  smith_assert_span_equal(actual.op_span, expected.op_span);
   munit_assert_not_null(actual.left);
   smith_assert_expression_equal(*actual.left, *expected.left);
   munit_assert_not_null(actual.right);
